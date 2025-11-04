@@ -1,8 +1,8 @@
-import { 
-    collection, 
-    doc, 
-    getDoc, 
-    setDoc, 
+import {
+    collection,
+    doc,
+    getDoc,
+    setDoc,
     updateDoc,
     serverTimestamp
 } from 'firebase/firestore';
@@ -18,8 +18,8 @@ const convertToStrictBoolean = (value) => {
     if (value === true || value === false) {
         return value;
     }
-    if (value === 'true' || value === 'false') {
-        return value === 'true';
+    if (value === true || value === 'false') {
+        return value === true;
     }
     return value;
 };
@@ -27,9 +27,9 @@ const convertToStrictBoolean = (value) => {
 export const createUserDocument = async (userId, userData) => {
     try {
         const userDoc = getUserDocument(userId);
-        
+
         const onboardingCompleted = convertToStrictBoolean(userData.onboardingCompleted);
-        
+
         const userDataWithTimestamps = {
             email: String(userData.email || ''),
             firstName: String(userData.firstName || ''),
@@ -40,7 +40,7 @@ export const createUserDocument = async (userId, userData) => {
             updatedAt: serverTimestamp(),
             lastLogin: serverTimestamp()
         };
-        
+
         await setDoc(userDoc, userDataWithTimestamps);
         return { success: true, error: null };
     } catch (error) {
@@ -52,7 +52,7 @@ export const createUserDocument = async (userId, userData) => {
 export const updateUserDocument = async (userId, updates) => {
     try {
         const userDoc = getUserDocument(userId);
-        
+
         const cleanUpdates = {};
         for (const [key, value] of Object.entries(updates)) {
             if (key === 'onboardingCompleted' || key.includes('Completed') || key.startsWith('is')) {
@@ -67,12 +67,12 @@ export const updateUserDocument = async (userId, updates) => {
                 cleanUpdates[key] = value;
             }
         }
-        
+
         const updatesWithTimestamp = {
             ...cleanUpdates,
             updatedAt: serverTimestamp()
         };
-        
+
         await updateDoc(userDoc, updatesWithTimestamp);
         return { success: true, error: null };
     } catch (error) {
@@ -84,11 +84,11 @@ export const updateUserDocument = async (userId, updates) => {
 export const getUserData = async (userId) => {
     try {
         const userDoc = getUserDocument(userId);
-        const userSnapshot = await getDoc(userDoc);
-        
-        if (userSnapshot.exists()) {
-            const data = userSnapshot.data();
-            
+        const usersnapshot = await getDoc(userDoc);
+
+        if (usersnapshot.exists()) {
+            const data = usersnapshot.data();
+
             const cleanData = {};
             for (const [key, value] of Object.entries(data)) {
                 if (key === 'onboardingCompleted' || key.includes('Completed') || key.startsWith('is')) {
@@ -97,7 +97,7 @@ export const getUserData = async (userId) => {
                     cleanData[key] = value;
                 }
             }
-            
+
             return { data: cleanData, error: null };
         } else {
             return { data: null, error: 'User not found' };

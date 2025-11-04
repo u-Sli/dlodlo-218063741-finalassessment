@@ -7,12 +7,10 @@ import {
     TouchableOpacity,
     Image,
     Alert,
-    Modal,
     TextInput,
     ActivityIndicator
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-
 
 const mockBookings = [
     {
@@ -54,8 +52,8 @@ const ProfileScreen = ({ navigation }) => {
     const { user, userData, logout, updateProfile } = useAuth();
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
     const [editingProfile, setEditingProfile] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [profileData, setProfileData] = useState({
         displayName: '',
         email: ''
@@ -96,7 +94,6 @@ const ProfileScreen = ({ navigation }) => {
                     onPress: async () => {
                         try {
                             await logout();
-
                         } catch (error) {
                             Alert.alert('Logout Error', 'Failed to logout. Please try again.');
                         }
@@ -107,11 +104,7 @@ const ProfileScreen = ({ navigation }) => {
     };
 
     const handleEditProfile = () => {
-        setProfileData({
-            displayName: user.displayName || userData?.firstName ? `${userData.firstName} ${userData.lastName}` : '',
-            email: user.email || ''
-        });
-        setShowEditModal(true);
+        setIsEditing(true);
     };
 
     const handleSaveProfile = async () => {
@@ -127,7 +120,7 @@ const ProfileScreen = ({ navigation }) => {
             });
 
             if (result.success) {
-                setShowEditModal(false);
+                setIsEditing(false);
                 Alert.alert('Success', 'Profile updated successfully');
             } else {
                 Alert.alert('Error', result.error || 'Failed to update profile');
@@ -137,6 +130,15 @@ const ProfileScreen = ({ navigation }) => {
         } finally {
             setEditingProfile(false);
         }
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        // Reset to original values
+        setProfileData({
+            displayName: user.displayName || userData?.firstName ? `${userData.firstName} ${userData.lastName}` : 'User',
+            email: user.email || ''
+        });
     };
 
     const formatDate = (dateString) => {
@@ -173,7 +175,12 @@ const ProfileScreen = ({ navigation }) => {
         }
     };
 
-    if (!user) {
+    // Ensure boolean values for all boolean props
+    const isEditingProfile = !!editingProfile;
+    const isLoadingBookings = !!loading;
+    const isUserAuthenticated = !!user;
+
+    if (!isUserAuthenticated) {
         return (
             <View style={styles.container}>
                 <View style={styles.authRequired}>
@@ -192,7 +199,6 @@ const ProfileScreen = ({ navigation }) => {
 
     return (
         <ScrollView style={styles.container}>
-
             <View style={styles.header}>
                 <View style={styles.avatarContainer}>
                     <View style={styles.avatar}>
@@ -201,22 +207,73 @@ const ProfileScreen = ({ navigation }) => {
                         </Text>
                     </View>
                 </View>
-                <Text style={styles.userName}>{profileData.displayName}</Text>
-                <Text style={styles.userEmail}>{profileData.email}</Text>
-
-                <TouchableOpacity
-                    style={styles.editButton}
-                    onPress={handleEditProfile}
-                >
-                    <Text style={styles.editButtonText}>Edit Profile</Text>
-                </TouchableOpacity>
+                
+                {isEditing ? (
+                    <View style={styles.editForm}>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.inputLabel}>Full Name</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                value={profileData.displayName}
+                                onChangeText={(text) => setProfileData({ ...profileData, displayName: text })}
+                                placeholder="Enter your full name"
+                            />
+                        </View>
+                        
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.inputLabel}>Email</Text>
+                            <TextInput
+                                style={[styles.textInput, styles.disabledInput]}
+                                value={profileData.email}
+                                editable={false}
+                                placeholder="Email cannot be changed"
+                            />
+                            <Text style={styles.helperText}>
+                                Email address cannot be modified
+                            </Text>
+                        </View>
+                        
+                        <View style={styles.editButtons}>
+                            <TouchableOpacity
+                                style={[styles.editButton, styles.cancelButton]}
+                                onPress={handleCancelEdit}
+                                disabled={isEditingProfile}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity
+                                style={[styles.editButton, styles.saveButton]}
+                                onPress={handleSaveProfile}
+                                disabled={isEditingProfile}
+                            >
+                                {isEditingProfile ? (
+                                    <ActivityIndicator color="#fff" size="small" />
+                                ) : (
+                                    <Text style={styles.saveButtonText}>Save</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                ) : (
+                    <>
+                        <Text style={styles.userName}>{profileData.displayName}</Text>
+                        <Text style={styles.userEmail}>{profileData.email}</Text>
+                        
+                        <TouchableOpacity
+                            style={styles.editProfileButton}
+                            onPress={handleEditProfile}
+                        >
+                            <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+                        </TouchableOpacity>
+                    </>
+                )}
             </View>
-
 
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>My Bookings</Text>
 
-                {loading ? (
+                {isLoadingBookings ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color="#FF5A5F" />
                         <Text style={styles.loadingText}>Loading bookings...</Text>
@@ -279,7 +336,6 @@ const ProfileScreen = ({ navigation }) => {
                 )}
             </View>
 
-
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Account</Text>
                 <TouchableOpacity
@@ -289,65 +345,6 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
             </View>
-
-
-            <Modal
-                visible={showEditModal}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowEditModal(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Edit Profile</Text>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Full Name</Text>
-                            <TextInput
-                                style={styles.textInput}
-                                value={profileData.displayName}
-                                onChangeText={(text) => setProfileData({ ...profileData, displayName: text })}
-                                placeholder="Enter your full name"
-                            />
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Email</Text>
-                            <TextInput
-                                style={[styles.textInput, styles.disabledInput]}
-                                value={profileData.email}
-                                editable={false}
-                                placeholder="Email cannot be changed"
-                            />
-                            <Text style={styles.helperText}>
-                                Email address cannot be modified
-                            </Text>
-                        </View>
-
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton]}
-                                onPress={() => setShowEditModal(false)}
-                                disabled={editingProfile}
-                            >
-                                <Text style={styles.cancelButtonText}>Cancel</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.saveButton]}
-                                onPress={handleSaveProfile}
-                                disabled={editingProfile}
-                            >
-                                {editingProfile ? (
-                                    <ActivityIndicator color="#fff" size="small" />
-                                ) : (
-                                    <Text style={styles.saveButtonText}>Save Changes</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
         </ScrollView>
     );
 };
@@ -421,7 +418,7 @@ const styles = StyleSheet.create({
         color: '#666',
         marginBottom: 16,
     },
-    editButton: {
+    editProfileButton: {
         backgroundColor: '#f8f9fa',
         paddingHorizontal: 20,
         paddingVertical: 8,
@@ -429,8 +426,68 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#dee2e6',
     },
-    editButtonText: {
+    editProfileButtonText: {
         color: '#333',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    editForm: {
+        width: '100%',
+    },
+    inputGroup: {
+        marginBottom: 16,
+        width: '100%',
+    },
+    inputLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 8,
+    },
+    textInput: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        backgroundColor: '#fafafa',
+        width: '100%',
+    },
+    disabledInput: {
+        backgroundColor: '#f5f5f5',
+        color: '#666',
+    },
+    helperText: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 4,
+    },
+    editButtons: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 8,
+    },
+    editButton: {
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        flex: 1,
+    },
+    cancelButton: {
+        backgroundColor: '#f8f9fa',
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
+    saveButton: {
+        backgroundColor: '#FF5A5F',
+    },
+    cancelButtonText: {
+        color: '#666',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    saveButtonText: {
+        color: '#fff',
         fontSize: 14,
         fontWeight: '600',
     },
@@ -550,81 +607,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     logoutButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    modalContent: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 24,
-        width: '100%',
-        maxWidth: 400,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    inputGroup: {
-        marginBottom: 20,
-    },
-    inputLabel: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 8,
-    },
-    textInput: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        backgroundColor: '#fafafa',
-    },
-    disabledInput: {
-        backgroundColor: '#f5f5f5',
-        color: '#666',
-    },
-    helperText: {
-        fontSize: 12,
-        color: '#666',
-        marginTop: 4,
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    modalButton: {
-        flex: 1,
-        padding: 16,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    cancelButton: {
-        backgroundColor: '#f8f9fa',
-        borderWidth: 1,
-        borderColor: '#ddd',
-    },
-    saveButton: {
-        backgroundColor: '#FF5A5F',
-    },
-    cancelButtonText: {
-        color: '#666',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    saveButtonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',

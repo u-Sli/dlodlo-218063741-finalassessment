@@ -7,7 +7,6 @@ import {
     TouchableOpacity,
     TextInput,
     Alert,
-    Modal,
     ActivityIndicator,
     Dimensions
 } from 'react-native';
@@ -27,48 +26,43 @@ const BookingScreen = ({ route, navigation }) => {
     const [specialRequests, setSpecialRequests] = useState('');
     const [showCheckInPicker, setShowCheckInPicker] = useState(false);
     const [showCheckOutPicker, setShowCheckOutPicker] = useState(false);
-    const [showConfirmation, setShowConfirmation] = useState(false);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
+    // Ensure boolean conversion for DateTimePicker visibility
+    const shouldShowCheckInPicker = !!showCheckInPicker;
+    const shouldShowCheckOutPicker = !!showCheckOutPicker;
 
     const calculateNights = () => {
         const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
         return Math.ceil(timeDiff / (1000 * 3600 * 24));
     };
 
-
     const calculateTotal = () => {
         const nights = calculateNights();
         return nights * hotel.price * numberOfRooms;
     };
-
 
     const validateForm = () => {
         const newErrors = {};
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-
         if (!user) {
             newErrors.auth = 'Please sign in to book a hotel';
         }
-
 
         if (checkInDate < today) {
             newErrors.checkInDate = 'Check-in date cannot be in the past';
         }
 
-
         if (checkOutDate <= checkInDate) {
             newErrors.checkOutDate = 'Check-out date must be after check-in date';
         }
 
-
         if (numberOfRooms < 1 || numberOfRooms > 10) {
             newErrors.numberOfRooms = 'Number of rooms must be between 1 and 10';
         }
-
 
         if (numberOfGuests < 1 || numberOfGuests > (numberOfRooms * 4)) {
             newErrors.numberOfGuests = `Maximum ${numberOfRooms * 4} guests for ${numberOfRooms} room(s)`;
@@ -78,18 +72,13 @@ const BookingScreen = ({ route, navigation }) => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleBookNow = () => {
-        if (!validateForm()) return;
-        setShowConfirmation(true);
-    };
-
     const handleConfirmBooking = async () => {
+        if (!validateForm()) return;
+        
         setLoading(true);
 
         try {
-
             await new Promise(resolve => setTimeout(resolve, 2000));
-
 
             const booking = {
                 id: Date.now().toString(),
@@ -105,14 +94,9 @@ const BookingScreen = ({ route, navigation }) => {
                 userId: user.uid
             };
 
-
-
-            setShowConfirmation(false);
-
-
             Alert.alert(
                 'Booking Confirmed!',
-                `Your booking at ${hotel.name} has been confirmed. Total: $${calculateTotal()}`,
+                `Your booking at ${hotel.name} has been confirmed.\n\nCheck-in: ${formatDate(checkInDate)}\nCheck-out: ${formatDate(checkOutDate)}\nRooms: ${numberOfRooms}\nGuests: ${numberOfGuests}\nTotal: $${calculateTotal()}`,
                 [
                     {
                         text: 'View Bookings',
@@ -161,6 +145,9 @@ const BookingScreen = ({ route, navigation }) => {
         }
     };
 
+    // Ensure boolean for disabled state
+    const isBookButtonDisabled = !!loading;
+
     if (!user) {
         return (
             <View style={styles.container}>
@@ -180,16 +167,13 @@ const BookingScreen = ({ route, navigation }) => {
 
     return (
         <ScrollView style={styles.container}>
-
             <View style={styles.hotelSummary}>
                 <Text style={styles.hotelName}>{hotel.name}</Text>
                 <Text style={styles.hotelLocation}>{hotel.location}</Text>
                 <Text style={styles.hotelPrice}>${hotel.price} / night</Text>
             </View>
 
-
             <View style={styles.form}>
-
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Check-in Date</Text>
                     <TouchableOpacity
@@ -201,7 +185,6 @@ const BookingScreen = ({ route, navigation }) => {
                     {errors.checkInDate && <Text style={styles.errorText}>{errors.checkInDate}</Text>}
                 </View>
 
-
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Check-out Date</Text>
                     <TouchableOpacity
@@ -212,7 +195,6 @@ const BookingScreen = ({ route, navigation }) => {
                     </TouchableOpacity>
                     {errors.checkOutDate && <Text style={styles.errorText}>{errors.checkOutDate}</Text>}
                 </View>
-
 
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Number of Rooms</Text>
@@ -234,7 +216,6 @@ const BookingScreen = ({ route, navigation }) => {
                     {errors.numberOfRooms && <Text style={styles.errorText}>{errors.numberOfRooms}</Text>}
                 </View>
 
-
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Number of Guests</Text>
                     <View style={styles.counterContainer}>
@@ -255,7 +236,6 @@ const BookingScreen = ({ route, navigation }) => {
                     {errors.numberOfGuests && <Text style={styles.errorText}>{errors.numberOfGuests}</Text>}
                 </View>
 
-
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Special Requests (Optional)</Text>
                     <TextInput
@@ -263,12 +243,11 @@ const BookingScreen = ({ route, navigation }) => {
                         placeholder="Any special requirements or requests..."
                         value={specialRequests}
                         onChangeText={setSpecialRequests}
-                        multiline
+                        multiline={true}
                         numberOfLines={3}
                         textAlignVertical="top"
                     />
                 </View>
-
 
                 <View style={styles.priceSummary}>
                     <View style={styles.priceRow}>
@@ -285,11 +264,10 @@ const BookingScreen = ({ route, navigation }) => {
                     </View>
                 </View>
 
-
                 <TouchableOpacity
                     style={styles.bookButton}
-                    onPress={handleBookNow}
-                    disabled={loading}
+                    onPress={handleConfirmBooking}
+                    disabled={isBookButtonDisabled}
                 >
                     {loading ? (
                         <ActivityIndicator color="#fff" />
@@ -299,8 +277,7 @@ const BookingScreen = ({ route, navigation }) => {
                 </TouchableOpacity>
             </View>
 
-
-            {showCheckInPicker && (
+            {shouldShowCheckInPicker && (
                 <DateTimePicker
                     value={checkInDate}
                     mode="date"
@@ -310,7 +287,7 @@ const BookingScreen = ({ route, navigation }) => {
                 />
             )}
 
-            {showCheckOutPicker && (
+            {shouldShowCheckOutPicker && (
                 <DateTimePicker
                     value={checkOutDate}
                     mode="date"
@@ -319,76 +296,6 @@ const BookingScreen = ({ route, navigation }) => {
                     minimumDate={new Date(checkInDate.getTime() + 86400000)}
                 />
             )}
-
-
-            <Modal
-                visible={showConfirmation}
-                transparent={true}
-                animationType="slide"
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Confirm Booking</Text>
-
-                        <View style={styles.confirmationDetails}>
-                            <Text style={styles.confirmationHotel}>{hotel.name}</Text>
-                            <Text style={styles.confirmationLocation}>{hotel.location}</Text>
-
-                            <View style={styles.confirmationRow}>
-                                <Text style={styles.confirmationLabel}>Check-in:</Text>
-                                <Text style={styles.confirmationValue}>{formatDate(checkInDate)}</Text>
-                            </View>
-
-                            <View style={styles.confirmationRow}>
-                                <Text style={styles.confirmationLabel}>Check-out:</Text>
-                                <Text style={styles.confirmationValue}>{formatDate(checkOutDate)}</Text>
-                            </View>
-
-                            <View style={styles.confirmationRow}>
-                                <Text style={styles.confirmationLabel}>Duration:</Text>
-                                <Text style={styles.confirmationValue}>{calculateNights()} nights</Text>
-                            </View>
-
-                            <View style={styles.confirmationRow}>
-                                <Text style={styles.confirmationLabel}>Rooms:</Text>
-                                <Text style={styles.confirmationValue}>{numberOfRooms}</Text>
-                            </View>
-
-                            <View style={styles.confirmationRow}>
-                                <Text style={styles.confirmationLabel}>Guests:</Text>
-                                <Text style={styles.confirmationValue}>{numberOfGuests}</Text>
-                            </View>
-
-                            <View style={[styles.confirmationRow, styles.confirmationTotal]}>
-                                <Text style={styles.totalLabel}>Total:</Text>
-                                <Text style={styles.totalValue}>${calculateTotal()}</Text>
-                            </View>
-                        </View>
-
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton]}
-                                onPress={() => setShowConfirmation(false)}
-                                disabled={loading}
-                            >
-                                <Text style={styles.cancelButtonText}>Cancel</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.confirmButton]}
-                                onPress={handleConfirmBooking}
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <ActivityIndicator color="#fff" size="small" />
-                                ) : (
-                                    <Text style={styles.confirmButtonText}>Confirm Booking</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
         </ScrollView>
     );
 };
@@ -564,90 +471,6 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    modalContent: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 24,
-        width: '100%',
-        maxWidth: 400,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    confirmationDetails: {
-        marginBottom: 24,
-    },
-    confirmationHotel: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 4,
-    },
-    confirmationLocation: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 16,
-    },
-    confirmationRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    confirmationLabel: {
-        fontSize: 14,
-        color: '#666',
-    },
-    confirmationValue: {
-        fontSize: 14,
-        color: '#333',
-        fontWeight: '500',
-    },
-    confirmationTotal: {
-        borderTopWidth: 1,
-        borderTopColor: '#ddd',
-        paddingTop: 8,
-        marginTop: 8,
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    modalButton: {
-        flex: 1,
-        padding: 16,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    cancelButton: {
-        backgroundColor: '#f8f9fa',
-        borderWidth: 1,
-        borderColor: '#ddd',
-    },
-    confirmButton: {
-        backgroundColor: '#FF5A5F',
-    },
-    cancelButtonText: {
-        color: '#666',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    confirmButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
     },
 });
 

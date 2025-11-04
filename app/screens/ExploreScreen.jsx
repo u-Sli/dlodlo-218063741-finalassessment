@@ -248,7 +248,7 @@ const ExploreScreen = ({ navigation }) => {
 
             <View style={styles.resultsContainer}>
                 <Text style={styles.resultsText}>
-                    {filteredHotels.length} {filteredHotels.length === 1 ? 'hotel' : 'hotels'} found
+                    {filteredHotels.length} {filteredHotels.length === 1 ? 'hotel' : hotels} found
                 </Text>
             </View>
 

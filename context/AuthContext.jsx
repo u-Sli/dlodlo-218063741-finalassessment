@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
   const checkOnboardingStatus = async () => {
     try {
       const onboardingCompleted = await AsyncStorage.getItem('@onboarding_completed');
-      const isFirst = onboardingCompleted !== 'true';
+      const isFirst = onboardingCompleted !== true;
       setIsFirstLaunch(isFirst);
     } catch (error) {
       setIsFirstLaunch(true);
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
   const completeOnboarding = async () => {
     try {
-      await AsyncStorage.setItem('@onboarding_completed', 'true');
+      await AsyncStorage.setItem('@onboarding_completed', true);
       setIsFirstLaunch(false);
     } catch (error) {
       console.error(error);
