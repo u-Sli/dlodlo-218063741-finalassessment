@@ -1,8 +1,9 @@
-// firebase.js
+
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
-// Directly import from .env (if this worked in your other project)
+
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -12,7 +13,13 @@ const firebaseConfig = {
   appId: process.env.FIREBASE_APP_ID
 };
 
+
 const app = initializeApp(firebaseConfig);
+
+
+const auth = getAuth(app);
+
+
 const db = getFirestore(app);
 
-export { db };
+export { db, auth, app };
