@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "899482276477",
+    "project_id": "final-assessment-f0cfd",
+    "storage_bucket": "final-assessment-f0cfd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:899482276477:android:ac594b642a4b720a0d9714",
+        "android_client_info": {
+          "package_name": "com.dlodlo.finalassessment"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUbjfxfVwaPNd13cNtnuSeCtSKL6SnwkQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
