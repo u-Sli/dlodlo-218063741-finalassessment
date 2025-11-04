@@ -12,7 +12,7 @@ import {
     Dimensions
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 

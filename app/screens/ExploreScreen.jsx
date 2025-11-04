@@ -12,8 +12,8 @@ import {
     ActivityIndicator,
     Alert
 } from 'react-native';
-import { sampleHotels } from '../data/hotels';
-import HotelCard from '../components/HotelCard';
+import { sampleHotels } from '../../data/Hotels';
+import HotelCard from '../../components/HotelCard';
 
 const { width } = Dimensions.get('window');
 

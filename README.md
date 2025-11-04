@@ -7,3 +7,5 @@ npm install @react-navigation/stack
 npm install react-native-gesture-handler
 npm install @react-native-firebase/app
 npm install firebase
+npm install @expo/vector-icons
+npm install @react-native-async-storage/async-storage

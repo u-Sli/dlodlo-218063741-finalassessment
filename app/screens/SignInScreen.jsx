@@ -45,7 +45,7 @@ const SignInScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
-            const { signIn } = await import('../../services/firebaseAuth');
+            const { signIn } = await import('../../services/FirebaseAuth');
             const { user, error } = await signIn(email, password);
 
             if (error) {

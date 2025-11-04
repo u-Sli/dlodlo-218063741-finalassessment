@@ -10,7 +10,7 @@ import {
     TextInput,
     Alert
 } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const HotelDetailsScreen = ({ route, navigation }) => {
     const { hotel: initialHotel } = route.params;

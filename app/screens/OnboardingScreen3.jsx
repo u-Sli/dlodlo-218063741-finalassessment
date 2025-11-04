@@ -17,7 +17,7 @@ const OnboardingScreen3 = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Image 
-        source={require('../../../assets/onboarding3.png')} 
+        source={require('../../assets/images/Files/Materials/01-Onboarding-Page/Onboarding-1.png')} 
         style={styles.image}
         resizeMode="contain"
       />

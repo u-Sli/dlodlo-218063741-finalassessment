@@ -1,12 +1,16 @@
-// App.jsx
 import React from 'react';
-import { View } from 'react-native';
-import FirebaseTest from './app/FirebaseTest';
+import { StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider } from './context/AuthContext';
+import AppNavigator from './navigation/AppNavigation';
 
 export default function App() {
   return (
-    <View style={{ flex: 1, justifyContent: 'center' }}>
-      <FirebaseTest />
-    </View>
+    <SafeAreaProvider>
+      <StatusBar barStyle="dark-content" />
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
