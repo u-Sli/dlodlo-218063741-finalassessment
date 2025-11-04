@@ -18,7 +18,8 @@ export const signUp = async (email, password, userData = {}) => {
             email: user.email,
             firstName: userData.firstName || '',
             lastName: userData.lastName || '',
-            displayName: userData.fullName || ''
+            displayName: userData.fullName || '',
+            onboardingCompleted: false
         };
 
         const result = await createUserDocument(user.uid, userDocData);
@@ -115,7 +116,8 @@ export const setupAuthListener = (callback) => {
             if (!userData) {
                 await createUserDocument(user.uid, {
                     email: user.email,
-                    displayName: user.displayName || ''
+                    displayName: user.displayName || '',
+                    onboardingCompleted: false
                 });
             }
         }

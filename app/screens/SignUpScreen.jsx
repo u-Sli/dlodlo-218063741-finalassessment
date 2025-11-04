@@ -46,6 +46,11 @@ const SignUpScreen = ({ navigation }) => {
             newErrors.password = 'Password is required';
         } else if (formData.password.length < 6) {
             newErrors.password = 'Password must be at least 6 characters';
+        } else {
+            const strength = checkPasswordStrength(formData.password);
+            if (strength === 'weak') {
+                newErrors.password = 'Password is too weak';
+            }
         }
 
         if (!formData.confirmPassword) {
@@ -58,11 +63,53 @@ const SignUpScreen = ({ navigation }) => {
         return Object.keys(newErrors).length === 0;
     };
 
+    const checkPasswordStrength = (password) => {
+        const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/;
+        const mediumRegex = /^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})/;
+
+        if (strongRegex.test(password)) {
+            setPasswordStrength('strong');
+            return 'strong';
+        } else if (mediumRegex.test(password)) {
+            setPasswordStrength('medium');
+            return 'medium';
+        } else {
+            setPasswordStrength('weak');
+            return 'weak';
+        }
+    };
+
+    const getPasswordStrengthColor = () => {
+        switch (passwordStrength) {
+            case 'strong': return '#4CAF50';
+            case 'medium': return '#FF9800';
+            case 'weak': return '#F44336';
+            default: return '#ddd';
+        }
+    };
+
+    const getPasswordStrengthText = () => {
+        switch (passwordStrength) {
+            case 'strong': return 'Strong password';
+            case 'medium': return 'Medium strength';
+            case 'weak': return 'Weak password';
+            default: return '';
+        }
+    };
+
     const handleInputChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
 
         if (errors[field]) {
             setErrors(prev => ({ ...prev, [field]: '' }));
+        }
+
+        if (field === 'password') {
+            if (value.length > 0) {
+                checkPasswordStrength(value);
+            } else {
+                setPasswordStrength('');
+            }
         }
     };
 
@@ -75,7 +122,9 @@ const SignUpScreen = ({ navigation }) => {
             const userData = {
                 firstName: formData.firstName.trim(),
                 lastName: formData.lastName.trim(),
-                fullName: `${formData.firstName.trim()} ${formData.lastName.trim()}`
+                fullName: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+                createdAt: new Date(),
+                onboardingCompleted: false,
             };
 
             const { user, error } = await signUp(formData.email, formData.password, userData);
@@ -83,7 +132,9 @@ const SignUpScreen = ({ navigation }) => {
             if (error) {
                 Alert.alert('Sign Up Failed', error);
             } else {
-                Alert.alert('Success', 'Account created successfully!');
+                Alert.alert('Success', 'Account created successfully!', [
+                    { text: 'OK', onPress: () => navigation.navigate('SignIn') }
+                ]);
             }
         } catch (error) {
             Alert.alert('Error', 'An unexpected error occurred');
@@ -157,6 +208,19 @@ const SignUpScreen = ({ navigation }) => {
                             secureTextEntry
                             autoComplete="password-new"
                         />
+                        {formData.password.length > 0 && (
+                            <View style={styles.passwordStrength}>
+                                <View
+                                    style={[
+                                        styles.strengthBar,
+                                        { backgroundColor: getPasswordStrengthColor() }
+                                    ]}
+                                />
+                                <Text style={[styles.strengthText, { color: getPasswordStrengthColor() }]}>
+                                    {getPasswordStrengthText()}
+                                </Text>
+                            </View>
+                        )}
                         {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
                     </View>
 
@@ -259,6 +323,18 @@ const styles = StyleSheet.create({
         color: '#ff3b30',
         fontSize: 14,
         marginTop: 4,
+    },
+    passwordStrength: {
+        marginTop: 8,
+    },
+    strengthBar: {
+        height: 4,
+        borderRadius: 2,
+        marginBottom: 4,
+    },
+    strengthText: {
+        fontSize: 12,
+        fontWeight: '500',
     },
     button: {
         backgroundColor: '#FF5A5F',

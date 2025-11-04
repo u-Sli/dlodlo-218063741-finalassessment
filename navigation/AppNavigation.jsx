@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useAuth } from '../context/AuthContext';
+import OnboardingStack from './OnBoardingNavigation';
 import AuthStack from './AuthStack';
 import TabNavigator from './TabNavigation';
 import LoadingScreen from '../app/screens/LoadingScreen';
@@ -9,7 +10,7 @@ import LoadingScreen from '../app/screens/LoadingScreen';
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isFirstLaunch } = useAuth();
 
   if (loading) {
     return <LoadingScreen />;
@@ -19,7 +20,11 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
-          <Stack.Screen name="Auth" component={AuthStack} />
+          isFirstLaunch ? (
+            <Stack.Screen name="Onboarding" component={OnboardingStack} />
+          ) : (
+            <Stack.Screen name="Auth" component={AuthStack} />
+          )
         ) : (
           <Stack.Screen name="MainApp" component={TabNavigator} />
         )}

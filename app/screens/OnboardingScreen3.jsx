@@ -1,13 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../../context/AuthContext';
 
 const { width, height } = Dimensions.get('window');
 
 const OnboardingScreen3 = ({ navigation }) => {
-  const completeOnboarding = async () => {
+  const { completeOnboarding } = useAuth();
+
+  const handleCompleteOnboarding = async () => {
     try {
-      await AsyncStorage.setItem('@onboarding_completed', 'true');
+      await completeOnboarding();
       navigation.replace('Auth');
     } catch (error) {
       console.error('Error completing onboarding:', error);
@@ -34,7 +37,7 @@ const OnboardingScreen3 = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.button, styles.getStartedButton]}
-          onPress={completeOnboarding}
+          onPress={handleCompleteOnboarding}
         >
           <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>

@@ -14,17 +14,28 @@ export const getUserDocument = (userId) => {
     return doc(db, 'users', userId);
 };
 
+const convertToStrictBoolean = (value) => {
+    if (value === true || value === false) {
+        return value;
+    }
+    if (value === 'true' || value === 'false') {
+        return value === 'true';
+    }
+    return value;
+};
+
 export const createUserDocument = async (userId, userData) => {
     try {
         const userDoc = getUserDocument(userId);
         
-        // STRICT BOOLEAN CONVERSION - Remove all boolean fields
+        const onboardingCompleted = convertToStrictBoolean(userData.onboardingCompleted);
+        
         const userDataWithTimestamps = {
             email: String(userData.email || ''),
             firstName: String(userData.firstName || ''),
             lastName: String(userData.lastName || ''),
             displayName: String(userData.displayName || ''),
-            // REMOVED: onboardingCompleted completely
+            onboardingCompleted: onboardingCompleted,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
             lastLogin: serverTimestamp()
@@ -42,14 +53,10 @@ export const updateUserDocument = async (userId, updates) => {
     try {
         const userDoc = getUserDocument(userId);
         
-        // STRICT BOOLEAN CONVERSION for all updates
         const cleanUpdates = {};
-        
         for (const [key, value] of Object.entries(updates)) {
-            if (typeof value === 'boolean') {
-                cleanUpdates[key] = value;
-            } else if (value === 'true' || value === 'false') {
-                cleanUpdates[key] = value === 'true';
+            if (key === 'onboardingCompleted' || key.includes('Completed') || key.startsWith('is')) {
+                cleanUpdates[key] = convertToStrictBoolean(value);
             } else if (typeof value === 'string') {
                 cleanUpdates[key] = String(value);
             } else if (typeof value === 'number') {
@@ -82,13 +89,10 @@ export const getUserData = async (userId) => {
         if (userSnapshot.exists()) {
             const data = userSnapshot.data();
             
-            // STRICT BOOLEAN CONVERSION when reading from Firestore
             const cleanData = {};
             for (const [key, value] of Object.entries(data)) {
-                if (value === true || value === false) {
-                    cleanData[key] = Boolean(value);
-                } else if (value === 'true' || value === 'false') {
-                    cleanData[key] = value === 'true';
+                if (key === 'onboardingCompleted' || key.includes('Completed') || key.startsWith('is')) {
+                    cleanData[key] = convertToStrictBoolean(value);
                 } else {
                     cleanData[key] = value;
                 }
